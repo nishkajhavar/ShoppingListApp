@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 import os
+import json
 
 class LoginApp:
     def __init__(self, root):
@@ -123,7 +124,7 @@ class LoginApp:
     
         # Navigation buttons
         buttons = [
-            ("Shopping List", lambda: messagebox.showinfo("Info", "Shopping List Page")),
+            ("Shopping List", self.show_shopping_list_frame),  # Updated this line
             ("Budget", lambda: messagebox.showinfo("Info", "Budget Page")),
             ("Analytics", lambda: messagebox.showinfo("Info", "Analytics Page"))
         ]
@@ -186,201 +187,309 @@ class LoginApp:
             messagebox.showerror("Error", "Username already exists")
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
-
-def main():
-    root = tk.Tk()
-    app = LoginApp(root)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()import tkinter as tk
-from tkinter import messagebox
-import sqlite3
-import os
-
-class LoginApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Login System")
-        self.root.geometry("700x500")
-        self.root.resizable(False, False)
-
-        # Initialize database
-        self.setup_database()
-
-        # Show login page first
-        self.show_login_frame()
-
-    def setup_database(self):
-        try:
-            # First try to delete the existing database if it's corrupted
-            if os.path.exists('users.db'):
-                os.remove('users.db')
-        except:
-            pass
-
-        # Create new database connection
-        try:
-            with sqlite3.connect('users.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS users (
-                        username TEXT PRIMARY KEY,
-                        password TEXT NOT NULL
-                    )
-                ''')
-                conn.commit()
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
-
-    def clear_window(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-    def show_login_frame(self):
-        self.clear_window()
+            
+    def initialize_shopping_list(self):
+        """Initialize the shopping list JSON file if it doesn't exist"""
+        if not os.path.exists('shopping_list.json'):
+            try:
+                with open('shopping_list.json', 'w') as file:
+                    json.dump([], file)
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not create shopping list file: {str(e)}")
     
+    def load_shopping_list(self):
+        """Load shopping list from JSON file"""
+        try:
+            if os.path.exists('shopping_list.json'):
+                with open('shopping_list.json', 'r') as file:
+                    return json.load(file)
+            return []
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not load shopping list: {str(e)}")
+            return []
+    
+    def save_shopping_list(self, items):
+        """Save shopping list to JSON file"""
+        try:
+            with open('shopping_list.json', 'w') as file:
+                json.dump(items, file, indent=4)
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not save shopping list: {str(e)}")
+        
+    def show_shopping_list_frame(self):
+        self.clear_window()
+
         # Main frame
-        frame = tk.Frame(self.root, padx=20, pady=20)
-        frame.pack(expand=True)
+        main_frame = tk.Frame(self.root, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True)
     
         # Title
-        tk.Label(frame, text="Login", font=("Arial", 24)).pack(pady=20)
+        tk.Label(main_frame, text="View Your Shopping List", font=("Arial", 24)).pack(pady=20)
     
-        # Username
-        tk.Label(frame, text="Username:").pack()
-        self.username = tk.Entry(frame, width=30)
-        self.username.pack(pady=5)
+        # Search frame
+        search_frame = tk.Frame(main_frame)
+        search_frame.pack(fill="x", pady=10)
     
-        # Password
-        tk.Label(frame, text="Password:").pack()
-        self.password = tk.Entry(frame, show="*", width=30)
-        self.password.pack(pady=5)
+        tk.Label(search_frame, text="Search:").pack(side="left")
+        search_entry = tk.Entry(search_frame, width=30)
+        search_entry.pack(side="left", padx=5)
     
-        # Login button
-        login_btn = tk.Button(frame, text="Login", 
-                            command=self.login_user,
-                            width=20)
-        login_btn.pack(pady=20)
+        # Buttons frame
+        buttons_frame = tk.Frame(main_frame)
+        buttons_frame.pack(fill="x", pady=10)
     
-        # Create account link
-        create_acc_btn = tk.Button(frame, text="Create New Account", 
-                                 command=self.show_create_account_frame,
-                                 width=20)
-        create_acc_btn.pack()
-
-    def show_create_account_frame(self):
-        self.clear_window()
+        tk.Button(buttons_frame, text="Add Item", 
+                  command=self.show_add_item_frame).pack(side="left", padx=5)
+        tk.Button(buttons_frame, text="Sort List", 
+                  command=self.show_sort_list_frame).pack(side="left", padx=5)
     
-        # Main frame
-        frame = tk.Frame(self.root, padx=20, pady=20)
-        frame.pack(expand=True)
+        # Create scrollable frame for items
+        container = tk.Frame(main_frame)
+        container.pack(fill="both", expand=True)
     
-        # Title
-        tk.Label(frame, text="Create Account", font=("Arial", 24)).pack(pady=20)
+        canvas = tk.Canvas(container)
+        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
     
-        # Username
-        tk.Label(frame, text="Choose Username:").pack()
-        self.new_username = tk.Entry(frame, width=30)
-        self.new_username.pack(pady=5)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
     
-        # Password
-        tk.Label(frame, text="Choose Password:").pack()
-        self.new_password = tk.Entry(frame, show="*", width=30)
-        self.new_password.pack(pady=5)
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
     
-        # Confirm Password
-        tk.Label(frame, text="Confirm Password:").pack()
-        self.confirm_password = tk.Entry(frame, show="*", width=30)
-        self.confirm_password.pack(pady=5)
+        # Headers
+        header_frame = tk.Frame(scrollable_frame)
+        header_frame.pack(fill="x", pady=5)
     
-        # Submit button
-        submit_btn = tk.Button(frame, text="Create Account", 
-                             command=self.create_account,
-                             width=20)
-        submit_btn.pack(pady=20)
+        headers = ["Priority", "Item Name", "Price", "Quantity", "Total", "Actions"]
+        for header in headers:
+            tk.Label(header_frame, text=header, font=("Arial", 10, "bold")).pack(side="left", padx=10)
+    
+        def update_list(search_term=""):
+            # Clear current items (except headers)
+            for widget in scrollable_frame.winfo_children()[1:]:
+                widget.destroy()
+    
+            # Load and display items
+            items = self.load_shopping_list()
+            for i, item in enumerate(items):
+                if search_term.lower() in item['name'].lower():
+                    item_frame = tk.Frame(scrollable_frame)
+                    item_frame.pack(fill="x", pady=2)
+    
+                    # Priority status
+                    priority_text = "Priority" if item['priority'] else "Regular"
+                    tk.Button(item_frame, text=priority_text,
+                             command=lambda idx=i: self.toggle_priority(idx)).pack(side="left", padx=5)
+    
+                    # Item name
+                    tk.Label(item_frame, text=item['name']).pack(side="left", padx=5)
+    
+                    # Price
+                    tk.Label(item_frame, text=f"${item['price']:.2f}").pack(side="left", padx=5)
+    
+                    # Quantity
+                    tk.Label(item_frame, text=str(item['quantity'])).pack(side="left", padx=5)
+    
+                    # Total
+                    total = item['price'] * item['quantity']
+                    tk.Label(item_frame, text=f"${total:.2f}").pack(side="left", padx=5)
+    
+                    # Action buttons
+                    action_frame = tk.Frame(item_frame)
+                    action_frame.pack(side="left", padx=5)
+    
+                    tk.Button(action_frame, text="Purchase",
+                             command=lambda idx=i: self.purchase_item(idx)).pack(side="left", padx=2)
+    
+                    tk.Button(action_frame, text="Remove",
+                             command=lambda idx=i: self.remove_item(idx)).pack(side="left", padx=2)
+    
+        def search_callback(event=None):
+            update_list(search_entry.get())
+    
+        search_entry.bind('<KeyRelease>', search_callback)
+    
+        # Initial list update
+        update_list()
+    
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
     
         # Back button
-        back_btn = tk.Button(frame, text="Back to Login", 
-                           command=self.show_login_frame,
-                           width=20)
-        back_btn.pack()
-    
-    def show_home_frame(self):
+        tk.Button(main_frame, text="Back to Home", 
+                  command=self.show_home_frame).pack(pady=10)
+        
+    def show_add_item_frame(self):
         self.clear_window()
     
-        # Main frame
         frame = tk.Frame(self.root, padx=20, pady=20)
         frame.pack(expand=True)
     
         # Title
-        tk.Label(frame, text="Home Page", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Add New Item", font=("Arial", 24)).pack(pady=20)
     
-        # Navigation buttons
-        buttons = [
-            ("Shopping List", lambda: messagebox.showinfo("Info", "Shopping List Page")),
-            ("Budget", lambda: messagebox.showinfo("Info", "Budget Page")),
-            ("Analytics", lambda: messagebox.showinfo("Info", "Analytics Page"))
-        ]
+        # Item name
+        tk.Label(frame, text="Item Name:").pack()
+        item_name = tk.Entry(frame, width=30)
+        item_name.pack(pady=5)
     
-        for text, command in buttons:
-            btn = tk.Button(frame, text=text, command=command, width=20)
-            btn.pack(pady=10)
+        # Price frame
+        price_frame = tk.Frame(frame)
+        price_frame.pack(pady=5)
     
-        # Logout button
-        logout_btn = tk.Button(self.root, text="Logout", 
-                             command=self.show_login_frame,
-                             width=10)
-        logout_btn.pack(side="bottom", anchor="se", padx=10, pady=10)
+        tk.Label(price_frame, text="Price: $").pack(side="left")
+        price_entry = tk.Entry(price_frame, width=10)
+        price_entry.pack(side="left")
+    
+        # Quantity frame
+        quantity_frame = tk.Frame(frame)
+        quantity_frame.pack(pady=5)
+    
+        tk.Label(quantity_frame, text="Quantity:").pack(side="left")
+        quantity_var = tk.StringVar(value="1")  # Default quantity is 1
+        quantity_entry = tk.Entry(quantity_frame, textvariable=quantity_var, width=5)
+        quantity_entry.pack(side="left", padx=5)
+    
+        def increment_quantity():
+            try:
+                current = int(quantity_var.get())
+                quantity_var.set(str(current + 1))
+            except ValueError:
+                quantity_var.set("1")
+    
+        def decrement_quantity():
+            try:
+                current = int(quantity_var.get())
+                if current > 1:
+                    quantity_var.set(str(current - 1))
+            except ValueError:
+                quantity_var.set("1")
+    
+        # Up/Down buttons for quantity
+        quantity_buttons = tk.Frame(quantity_frame)
+        quantity_buttons.pack(side="left")
+    
+        tk.Button(quantity_buttons, text="▲", command=increment_quantity,
+                  width=2, height=1).pack()
+        tk.Button(quantity_buttons, text="▼", command=decrement_quantity,
+                  width=2, height=1).pack()
+    
+        # Priority checkbox
+        is_priority = tk.BooleanVar()
+        tk.Checkbutton(frame, text="Priority Item", variable=is_priority).pack(pady=5)
+    
+        def validate_price(price_str):
+            try:
+                price = float(price_str)
+                return price >= 0
+            except ValueError:
+                return False
+        
+        def validate_quantity(qty_str):
+            try:
+                qty = int(qty_str)
+                return qty > 0
+            except ValueError:
+                return False
+        
+        def add_item():
+            name = item_name.get().strip()
+            price_str = price_entry.get().strip()
+            qty_str = quantity_var.get().strip()
+        
+                # Validation
+            if not name:
+                messagebox.showerror("Error", "Please enter an item name")
+                return
+        
+            if not validate_price(price_str):
+                messagebox.showerror("Error", "Please enter a valid price")
+                return
+        
+            if not validate_quantity(qty_str):
+                messagebox.showerror("Error", "Please enter a valid quantity")
+                return
+        
+                # Get current items
+            items = self.load_shopping_list()
+        
+                # Create new item
+            new_item = {
+                "name": name,
+                "price": float(price_str),
+                "quantity": int(qty_str),
+                "priority": is_priority.get(),
+                "purchased": False
+            }
+        
+                # Add to list
+            items.append(new_item)
+        
+                # Save updated list
+            self.save_shopping_list(items)
+        
+            messagebox.showinfo("Success", "Item added successfully!")
+            self.show_shopping_list_frame()
+        
+            # Add and Back buttons
+            tk.Button(frame, text="Add Item", command=add_item, width=20).pack(pady=20)
+            tk.Button(frame, text="Back to Shopping List", 
+                        command=self.show_shopping_list_frame, width=20).pack()
 
-    def login_user(self):
-        username = self.username.get()
-        password = self.password.get()
 
-        if not username or not password:
-            messagebox.showerror("Error", "Please fill in all fields")
-            return
-
-        try:
-            with sqlite3.connect('users.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute('SELECT * FROM users WHERE username=? AND password=?',
-                             (username, password))
-
-                if cursor.fetchone():
-                    self.show_home_frame()
-                else:
-                    messagebox.showerror("Error", "Invalid username or password")
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
-
-    def create_account(self):
-        username = self.new_username.get()
-        password = self.new_password.get()
-        confirm = self.confirm_password.get()
-
-        if not username or not password or not confirm:
-            messagebox.showerror("Error", "Please fill in all fields")
-            return
-
-        if password != confirm:
-            messagebox.showerror("Error", "Passwords do not match")
-            return
-
-        try:
-            with sqlite3.connect('users.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute('INSERT INTO users VALUES (?, ?)',
-                             (username, password))
-                conn.commit()
-
-            messagebox.showinfo("Success", "Account created successfully!")
-            self.show_login_frame()
-
-        except sqlite3.IntegrityError:
-            messagebox.showerror("Error", "Username already exists")
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
+    def toggle_priority(self, index):
+        items = self.load_shopping_list()
+        items[index]['priority'] = not items[index]['priority']
+        self.save_shopping_list(items)
+        self.show_shopping_list_frame()
+    
+    def purchase_item(self, index):
+        items = self.load_shopping_list()
+        item = items.pop(index)
+        item['purchased'] = True
+        items.append(item)
+        self.save_shopping_list(items)
+        self.show_shopping_list_frame()
+    
+    def remove_item(self, index):
+        if messagebox.askyesno("Confirm", "Are you sure you want to remove this item?"):
+            items = self.load_shopping_list()
+            items.pop(index)
+            self.save_shopping_list(items)
+            self.show_shopping_list_frame()
+    
+    def show_sort_list_frame(self):
+        self.clear_window()
+    
+        frame = tk.Frame(self.root, padx=20, pady=20)
+        frame.pack(expand=True)
+    
+        tk.Label(frame, text="Sort Shopping List", font=("Arial", 24)).pack(pady=20)
+    
+        def sort_list(key):
+            items = self.load_shopping_list()
+            if key == 'name':
+                items.sort(key=lambda x: x['name'].lower())
+            elif key == 'name_desc':
+                items.sort(key=lambda x: x['name'].lower(), reverse=True)
+            elif key == 'priority':
+                items.sort(key=lambda x: (not x['priority'], x['name'].lower()))
+            self.save_shopping_list(items)
+            self.show_shopping_list_frame()
+    
+        tk.Button(frame, text="Sort by Name (A-Z)", 
+                  command=lambda: sort_list('name'), width=20).pack(pady=5)
+        tk.Button(frame, text="Sort by Name (Z-A)", 
+                  command=lambda: sort_list('name_desc'), width=20).pack(pady=5)
+        tk.Button(frame, text="Sort by Priority", 
+                  command=lambda: sort_list('priority'), width=20).pack(pady=5)
+    
+        tk.Button(frame, text="Back to Shopping List", 
+                 command=self.show_shopping_list_frame, width=20).pack(pady=20)
 
 def main():
     root = tk.Tk()
