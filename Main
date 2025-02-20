@@ -268,45 +268,55 @@ class LoginApp:
             tk.Label(header_frame, text=header, font=("Arial", 10, "bold")).pack(side="left", padx=10)
     
         def update_list(search_term=""):
-            # Clear current items (except headers)
+        # Clear current items (except headers)
             for widget in scrollable_frame.winfo_children()[1:]:
                 widget.destroy()
     
             # Load and display items
             items = self.load_shopping_list()
             for i, item in enumerate(items):
-                if search_term.lower() in item['name'].lower():
-                    item_frame = tk.Frame(scrollable_frame)
-                    item_frame.pack(fill="x", pady=2)
-    
-                    # Priority status
-                    priority_text = "Priority" if item['priority'] else "Regular"
-                    tk.Button(item_frame, text=priority_text,
-                             command=lambda idx=i: self.toggle_priority(idx)).pack(side="left", padx=5)
-    
-                    # Item name
-                    tk.Label(item_frame, text=item['name']).pack(side="left", padx=5)
-    
-                    # Price
-                    tk.Label(item_frame, text=f"${item['price']:.2f}").pack(side="left", padx=5)
-    
-                    # Quantity
-                    tk.Label(item_frame, text=str(item['quantity'])).pack(side="left", padx=5)
-    
-                    # Total
-                    total = item['price'] * item['quantity']
+                # Skip if item doesn't match search term
+                if search_term.lower() not in item.get('name', '').lower():
+                    continue
+        
+                item_frame = tk.Frame(scrollable_frame)
+                item_frame.pack(fill="x", pady=2)
+        
+                # Priority status
+                priority_text = "Priority" if item.get('priority', False) else "Regular"
+                tk.Button(item_frame, text=priority_text,
+                         command=lambda idx=i: self.toggle_priority(idx)).pack(side="left", padx=5)
+        
+                # Item name
+                tk.Label(item_frame, text=item.get('name', '')).pack(side="left", padx=5)
+        
+                # Price - Using get() with default value to prevent KeyError
+                try:
+                    price = float(item.get('price', 0))
+                    tk.Label(item_frame, text=f"${price:.2f}").pack(side="left", padx=5)
+                except (ValueError, TypeError):
+                    tk.Label(item_frame, text="$0.00").pack(side="left", padx=5)
+        
+                # Quantity
+                tk.Label(item_frame, text=str(item.get('quantity', 0))).pack(side="left", padx=5)
+        
+                # Total
+                try:
+                    total = float(item.get('price', 0)) * int(item.get('quantity', 0))
                     tk.Label(item_frame, text=f"${total:.2f}").pack(side="left", padx=5)
-    
-                    # Action buttons
-                    action_frame = tk.Frame(item_frame)
-                    action_frame.pack(side="left", padx=5)
-    
-                    tk.Button(action_frame, text="Purchase",
-                             command=lambda idx=i: self.purchase_item(idx)).pack(side="left", padx=2)
-    
-                    tk.Button(action_frame, text="Remove",
-                             command=lambda idx=i: self.remove_item(idx)).pack(side="left", padx=2)
-    
+                except (ValueError, TypeError):
+                    tk.Label(item_frame, text="$0.00").pack(side="left", padx=5)
+        
+                # Action buttons
+                action_frame = tk.Frame(item_frame)
+                action_frame.pack(side="left", padx=5)
+        
+                tk.Button(action_frame, text="Purchase",
+                         command=lambda idx=i: self.purchase_item(idx)).pack(side="left", padx=2)
+        
+                tk.Button(action_frame, text="Remove",
+                         command=lambda idx=i: self.remove_item(idx)).pack(side="left", padx=2)
+        
         def search_callback(event=None):
             update_list(search_entry.get())
     
@@ -334,33 +344,91 @@ class LoginApp:
     
         # Item name
         tk.Label(frame, text="Item Name:").pack()
-        item_name = tk.Entry(frame, width=30)
-        item_name.pack(pady=5)
+        self.item_name = tk.Entry(frame, width=30)  # Make it instance variable
+        self.item_name.pack(pady=5)
     
         # Price frame
         price_frame = tk.Frame(frame)
         price_frame.pack(pady=5)
     
         tk.Label(price_frame, text="Price: $").pack(side="left")
-        price_entry = tk.Entry(price_frame, width=10)
-        price_entry.pack(side="left")
+        self.price_entry = tk.Entry(price_frame, width=10)  # Make it instance variable
+        self.price_entry.pack(side="left")
     
         # Quantity frame
         quantity_frame = tk.Frame(frame)
         quantity_frame.pack(pady=5)
     
         tk.Label(quantity_frame, text="Quantity:").pack(side="left")
-        quantity_var = tk.StringVar(value="1")  # Default quantity is 1
-        quantity_entry = tk.Entry(quantity_frame, textvariable=quantity_var, width=5)
+        self.quantity_var = tk.StringVar(value="1")  # Make it instance variable
+        quantity_entry = tk.Entry(quantity_frame, textvariable=self.quantity_var, width=5)
         quantity_entry.pack(side="left", padx=5)
     
+        # Priority checkbox
+        self.is_priority = tk.BooleanVar()  # Make it instance variable
+        tk.Checkbutton(frame, text="Priority Item", variable=self.is_priority).pack(pady=5)
+    
+        # Add and Back buttons
+        tk.Button(frame, text="Add Item", command=self.add_item, width=20).pack(pady=20)
+        tk.Button(frame, text="Back to Shopping List", 
+                  command=self.show_shopping_list_frame, width=20).pack()
+
+    def add_item(self):
+        name = self.item_name.get().strip()
+        price_str = self.price_entry.get().strip()
+        qty_str = self.quantity_var.get().strip()
+        is_priority = self.is_priority.get()
+    
+        # Validation
+        if not name:
+            messagebox.showerror("Error", "Please enter an item name")
+            return
+    
+        try:
+            price = float(price_str)
+            if price < 0:
+                messagebox.showerror("Error", "Price cannot be negative")
+                return
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid price")
+            return
+    
+        try:
+            qty = int(qty_str)
+            if qty < 1:
+                messagebox.showerror("Error", "Quantity must be at least 1")
+                return
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid quantity")
+            return
+    
+        # Get current items
+        items = self.load_shopping_list()
+    
+        # Create new item
+        new_item = {
+            "name": name,
+            "price": price,  # float
+            "quantity": qty,  # int
+            "priority": is_priority,  # boolean
+            "purchased": False  # boolean
+        }
+        # Add to list
+        items.append(new_item)
+    
+        # Save updated list
+        self.save_shopping_list(items)
+    
+        messagebox.showinfo("Success", "Item added successfully!")
+        self.show_shopping_list_frame()
+        
         def increment_quantity():
             try:
                 current = int(quantity_var.get())
                 quantity_var.set(str(current + 1))
             except ValueError:
                 quantity_var.set("1")
-    
+        
         def decrement_quantity():
             try:
                 current = int(quantity_var.get())
@@ -368,85 +436,40 @@ class LoginApp:
                     quantity_var.set(str(current - 1))
             except ValueError:
                 quantity_var.set("1")
-    
-        # Up/Down buttons for quantity
-        quantity_buttons = tk.Frame(quantity_frame)
-        quantity_buttons.pack(side="left")
-    
-        tk.Button(quantity_buttons, text="▲", command=increment_quantity,
-                  width=2, height=1).pack()
-        tk.Button(quantity_buttons, text="▼", command=decrement_quantity,
-                  width=2, height=1).pack()
-    
-        # Priority checkbox
-        is_priority = tk.BooleanVar()
-        tk.Checkbutton(frame, text="Priority Item", variable=is_priority).pack(pady=5)
-    
+        
+            # Up/Down buttons for quantity
+            quantity_buttons = tk.Frame(quantity_frame)
+            quantity_buttons.pack(side="left")
+        
+            tk.Button(quantity_buttons, text="▲", command=increment_quantity,
+                      width=2, height=1).pack()
+            tk.Button(quantity_buttons, text="▼", command=decrement_quantity,
+                      width=2, height=1).pack()
+        
+            # Priority checkbox
+            is_priority = tk.BooleanVar()
+            tk.Checkbutton(frame, text="Priority Item", variable=is_priority).pack(pady=5)
+        
         def validate_price(price_str):
-            try:
-                price = float(price_str)
-                return price >= 0
-            except ValueError:
-                return False
-        
+                try:
+                    price = float(price_str)
+                    return price >= 0
+                except ValueError:
+                    return False
+            
         def validate_quantity(qty_str):
-            try:
-                qty = int(qty_str)
-                return qty > 0
-            except ValueError:
-                return False
-        
-        def add_item():
-            name = item_name.get().strip()
-            price_str = price_entry.get().strip()
-            qty_str = quantity_var.get().strip()
-        
-                # Validation
-            if not name:
-                messagebox.showerror("Error", "Please enter an item name")
-                return
-        
-            if not validate_price(price_str):
-                messagebox.showerror("Error", "Please enter a valid price")
-                return
-        
-            if not validate_quantity(qty_str):
-                messagebox.showerror("Error", "Please enter a valid quantity")
-                return
-        
-                # Get current items
-            items = self.load_shopping_list()
-        
-                # Create new item
-            new_item = {
-                "name": name,
-                "price": float(price_str),
-                "quantity": int(qty_str),
-                "priority": is_priority.get(),
-                "purchased": False
-            }
-        
-                # Add to list
-            items.append(new_item)
-        
-                # Save updated list
-            self.save_shopping_list(items)
-        
-            messagebox.showinfo("Success", "Item added successfully!")
-            self.show_shopping_list_frame()
-        
-            # Add and Back buttons
-            tk.Button(frame, text="Add Item", command=add_item, width=20).pack(pady=20)
-            tk.Button(frame, text="Back to Shopping List", 
-                        command=self.show_shopping_list_frame, width=20).pack()
-
-
+                try:
+                    qty = int(qty_str)
+                    return qty > 0
+                except ValueError:
+                    return False
+    
     def toggle_priority(self, index):
         items = self.load_shopping_list()
         items[index]['priority'] = not items[index]['priority']
         self.save_shopping_list(items)
         self.show_shopping_list_frame()
-    
+        
     def purchase_item(self, index):
         items = self.load_shopping_list()
         item = items.pop(index)
@@ -454,7 +477,7 @@ class LoginApp:
         items.append(item)
         self.save_shopping_list(items)
         self.show_shopping_list_frame()
-    
+        
     def remove_item(self, index):
         if messagebox.askyesno("Confirm", "Are you sure you want to remove this item?"):
             items = self.load_shopping_list()
