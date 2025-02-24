@@ -5,6 +5,7 @@ import os
 import json
 
 class LoginApp:
+    CATEGORIES = ['Produce', 'Dairy', 'Bakery', 'Frozen', 'Beverages', 'Snacks']
     def __init__(self, root):
         self.root = root
         self.root.title("Login System")
@@ -51,28 +52,28 @@ class LoginApp:
         frame.pack(expand=True)
     
         # Title
-        tk.Label(frame, text="Login", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Login", font=("Times New Roman", 24)).pack(pady=20)
     
         # Username
-        tk.Label(frame, text="Username:").pack()
+        tk.Label(frame, text="Username:",font=("Times New Roman", 12)).pack()
         self.username = tk.Entry(frame, width=30)
         self.username.pack(pady=5)
     
         # Password
-        tk.Label(frame, text="Password:").pack()
+        tk.Label(frame, text="Password:",font=("Times New Roman", 12)).pack()
         self.password = tk.Entry(frame, show="*", width=30)
         self.password.pack(pady=5)
     
         # Login button
         login_btn = tk.Button(frame, text="Login", 
                             command=self.login_user,
-                            width=20)
+                            width=20,font=("Times New Roman", 10))
         login_btn.pack(pady=20)
     
         # Create account link
         create_acc_btn = tk.Button(frame, text="Create New Account", 
                                  command=self.show_create_account_frame,
-                                 width=20)
+                                 width=20,font=("Times New Roman", 10))
         create_acc_btn.pack()
 
     def show_create_account_frame(self):
@@ -83,7 +84,7 @@ class LoginApp:
         frame.pack(expand=True)
     
         # Title
-        tk.Label(frame, text="Create Account", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Create Account", font=("Times New Roman", 24)).pack(pady=20)
     
         # Username
         tk.Label(frame, text="Choose Username:").pack()
@@ -120,12 +121,12 @@ class LoginApp:
         frame.pack(expand=True)
     
         # Title
-        tk.Label(frame, text="Home Page", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Home Page", font=("Times New Roman", 24)).pack(pady=20)
     
         # Navigation buttons
         buttons = [
             ("Shopping List", self.show_shopping_list_frame),  # Updated this line
-            ("Budget", lambda: messagebox.showinfo("Info", "Budget Page")),
+            ("Budget", lambda: self.show_view_budget_frame),  # Updated this line),
             ("Analytics", lambda: messagebox.showinfo("Info", "Analytics Page"))
         ]
     
@@ -224,7 +225,7 @@ class LoginApp:
         main_frame.pack(fill="both", expand=True)
     
         # Title
-        tk.Label(main_frame, text="View Your Shopping List", font=("Arial", 24)).pack(pady=20)
+        tk.Label(main_frame, text="View Your Shopping List", font=("Times New Roman", 24)).pack(pady=20)
     
         # Search frame
         search_frame = tk.Frame(main_frame)
@@ -263,9 +264,9 @@ class LoginApp:
         header_frame = tk.Frame(scrollable_frame)
         header_frame.pack(fill="x", pady=5)
     
-        headers = ["Priority", "Item Name", "Price", "Quantity", "Total", "Actions"]
+        headers = ["Priority", "Category", "Item Name", "Price", "Quantity", "Total", "Actions"]
         for header in headers:
-            tk.Label(header_frame, text=header, font=("Arial", 10, "bold")).pack(side="left", padx=10)
+            tk.Label(header_frame, text=header, font=("Times New Roman", 10, "bold")).pack(side="left", padx=10)
     
         def update_list(search_term=""):
         # Clear current items (except headers)
@@ -286,6 +287,9 @@ class LoginApp:
                 priority_text = "Priority" if item.get('priority', False) else "Regular"
                 tk.Button(item_frame, text=priority_text,
                          command=lambda idx=i: self.toggle_priority(idx)).pack(side="left", padx=5)
+                         
+                #Category
+                tk.Label(item_frame, text=item.get('category', '')).pack(side="left", padx=5)
         
                 # Item name
                 tk.Label(item_frame, text=item.get('name', '')).pack(side="left", padx=5)
@@ -328,10 +332,20 @@ class LoginApp:
         # Pack scrollbar and canvas
         scrollbar.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
+
+        # Create a frame for bottom buttons
+        bottom_button_frame = tk.Frame(main_frame)
+        bottom_button_frame.pack(fill="x", pady=10)
     
-        # Back button
-        tk.Button(main_frame, text="Back to Home", 
-                  command=self.show_home_frame).pack(pady=10)
+        # Add spacer frame to push buttons to the right
+        spacer = tk.Frame(bottom_button_frame)
+        spacer.pack(side="left", expand=True)
+    
+        # Back to Home button (right corner)
+        tk.Button(bottom_button_frame, 
+                  text="Back to Home",
+                  command=self.show_home_frame,
+                  width=15).pack(side="right", padx=10)
         
     def show_add_item_frame(self):
         self.clear_window()
@@ -340,7 +354,7 @@ class LoginApp:
         frame.pack(expand=True)
     
         # Title
-        tk.Label(frame, text="Add New Item", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Add New Item", font=("Times New Roman", 24)).pack(pady=20)
     
         # Item name
         tk.Label(frame, text="Item Name:").pack()
@@ -358,6 +372,13 @@ class LoginApp:
         # Quantity frame
         quantity_frame = tk.Frame(frame)
         quantity_frame.pack(pady=5)
+        
+        #Category frame
+        tk.Label(frame, text="Category:").pack()
+        self.category_var = tk.StringVar(value=self.CATEGORIES[0])
+        category_menu = tk.OptionMenu(frame, self.category_var, *self.CATEGORIES)
+        category_menu.pack(pady=5)
+
     
         tk.Label(quantity_frame, text="Quantity:").pack(side="left")
         self.quantity_var = tk.StringVar(value="1")  # Make it instance variable
@@ -372,6 +393,8 @@ class LoginApp:
         tk.Button(frame, text="Add Item", command=self.add_item, width=20).pack(pady=20)
         tk.Button(frame, text="Back to Shopping List", 
                   command=self.show_shopping_list_frame, width=20).pack()
+                  
+        
 
     def add_item(self):
         name = self.item_name.get().strip()
@@ -411,7 +434,8 @@ class LoginApp:
             "price": price,  # float
             "quantity": qty,  # int
             "priority": is_priority,  # boolean
-            "purchased": False  # boolean
+            "purchased": False,  # boolean
+            "category": self.category_var.get()
         }
         # Add to list
         items.append(new_item)
@@ -491,28 +515,198 @@ class LoginApp:
         frame = tk.Frame(self.root, padx=20, pady=20)
         frame.pack(expand=True)
     
-        tk.Label(frame, text="Sort Shopping List", font=("Arial", 24)).pack(pady=20)
+        tk.Label(frame, text="Sort Shopping List", font=("Times New Roman", 24)).pack(pady=20)
     
         def sort_list(key):
             items = self.load_shopping_list()
             if key == 'name':
                 items.sort(key=lambda x: x['name'].lower())
-            elif key == 'name_desc':
-                items.sort(key=lambda x: x['name'].lower(), reverse=True)
             elif key == 'priority':
                 items.sort(key=lambda x: (not x['priority'], x['name'].lower()))
+            elif key =='category':
+                items.sort(key=lambda x: (x.get('category', ''), x['name'].lower()))
+            elif key =='price':
+                items.sort(key=lambda x: float(x.get('price', 0)) * int(x.get('quantity', 0)))
             self.save_shopping_list(items)
             self.show_shopping_list_frame()
     
         tk.Button(frame, text="Sort by Name (A-Z)", 
                   command=lambda: sort_list('name'), width=20).pack(pady=5)
-        tk.Button(frame, text="Sort by Name (Z-A)", 
-                  command=lambda: sort_list('name_desc'), width=20).pack(pady=5)
         tk.Button(frame, text="Sort by Priority", 
                   command=lambda: sort_list('priority'), width=20).pack(pady=5)
+        tk.Button(frame, text="Sort by Category", 
+                  command=lambda: sort_list('category'), width=20).pack(pady=5)
+        tk.Button(frame, text="Sort by Price", 
+                  command=lambda: sort_list('price'), width=20).pack(pady=5)
     
         tk.Button(frame, text="Back to Shopping List", 
                  command=self.show_shopping_list_frame, width=20).pack(pady=20)
+
+    def show_view_budget_frame(self):
+        self.clear_window()
+    
+        # Main frame
+        frame = tk.Frame(self.root, padx=20, pady=20)
+        frame.pack(expand=True)
+    
+        # Title
+        tk.Label(frame, text="View Budget", font=("Times New Roman", 24)).pack(pady=20)
+    
+        # Create frame for budget displays
+        budget_frame = tk.Frame(frame)
+        budget_frame.pack(fill="x", pady=10)
+    
+        # Load budget data (you'll need to implement this)
+        budget_data = self.load_budget_data()
+    
+        # Display budget for each category
+        for category in self.CATEGORIES:
+            category_frame = tk.Frame(budget_frame)
+            category_frame.pack(fill="x", pady=5)
+    
+            tk.Label(category_frame, text=f"{category}:", font=("Times New Roman", 12, "bold")).pack(side="left", padx=10)
+    
+            # Total allocated
+            allocated = budget_data.get(category, {}).get('allocated', 0)
+            tk.Label(category_frame, text=f"Allocated: ${allocated:.2f}").pack(side="left", padx=10)
+    
+            # Remaining
+            remaining = budget_data.get(category, {}).get('remaining', 0)
+            tk.Label(category_frame, text=f"Remaining: ${remaining:.2f}").pack(side="left", padx=10)
+    
+        # Navigation buttons
+        button_frame = tk.Frame(frame)
+        button_frame.pack(pady=20)
+    
+        tk.Button(button_frame, text="Set Budget", 
+                  command=self.show_set_budget_frame, width=20).pack(pady=5)
+        tk.Button(button_frame, text="Back to Home", 
+                  command=self.show_home_frame, width=20).pack(pady=5)
+
+    def show_set_budget_frame(self):
+        self.clear_window()
+    
+        # Main frame
+        frame = tk.Frame(self.root, padx=20, pady=20)
+        frame.pack(expand=True)
+    
+        # Title
+        tk.Label(frame, text="Set Budget", font=("Times New Roman", 24)).pack(pady=20)
+    
+        # Time period selection
+        period_frame = tk.Frame(frame)
+        period_frame.pack(fill="x", pady=10)
+    
+        tk.Label(period_frame, text="Budget Period:").pack(side="left", padx=5)
+        period_var = tk.StringVar(value="Monthly")
+    
+        for period in ["Weekly", "Bi-weekly", "Monthly"]:
+            tk.Radiobutton(period_frame, text=period, variable=period_var, 
+                          value=period).pack(side="left", padx=5)
+    
+        # Total budget entry
+        total_frame = tk.Frame(frame)
+        total_frame.pack(fill="x", pady=10)
+    
+        tk.Label(total_frame, text="Total Budget: $").pack(side="left")
+        total_budget = tk.Entry(total_frame, width=10)
+        total_budget.pack(side="left", padx=5)
+    
+        # Category allocations
+        category_frames = {}
+        category_vars = {}
+        na_vars = {}
+    
+        for category in self.CATEGORIES:
+            cat_frame = tk.Frame(frame)
+            cat_frame.pack(fill="x", pady=5)
+            category_frames[category] = cat_frame
+    
+            tk.Label(cat_frame, text=f"{category}:").pack(side="left", padx=5)
+    
+            # Percentage entry
+            percent_var = tk.StringVar()
+            category_vars[category] = percent_var
+            percent_entry = tk.Entry(cat_frame, textvariable=percent_var, width=5)
+            percent_entry.pack(side="left")
+            tk.Label(cat_frame, text="%").pack(side="left")
+    
+            # NA checkbox
+            na_var = tk.BooleanVar()
+            na_vars[category] = na_var
+            tk.Checkbutton(cat_frame, text="N/A", variable=na_var,
+                          command=lambda e=percent_entry, v=na_var: e.config(
+                              state='disabled' if v.get() else 'normal')).pack(side="left", padx=5)
+
+    def set_budget():
+        try:
+            total = float(total_budget.get())
+            if total <= 0:
+                raise ValueError("Total budget must be positive")
+    
+            percentages = {}
+            for category in self.CATEGORIES:
+                if not na_vars[category].get():
+                    try:
+                        percent = float(category_vars[category].get())
+                        if percent < 0 or percent > 100:
+                            raise ValueError(f"Invalid percentage for {category}")
+                        percentages[category] = percent
+                    except ValueError:
+                        messagebox.showerror("Error", f"Invalid percentage for {category}")
+                        return
+
+            # Validate total percentage
+            if sum(percentages.values()) > 100:
+                messagebox.showerror("Error", "Total percentage exceeds 100%")
+                return
+
+            # Save budget data
+            budget_data = {
+                'period': period_var.get(),
+                'total': total,
+                'categories': {
+                    cat: {
+                        'allocated': total * (percentages.get(cat, 0) / 100),
+                        'remaining': total * (percentages.get(cat, 0) / 100)
+                    } for cat in self.CATEGORIES
+                }
+            }
+
+            self.save_budget_data(budget_data)
+            messagebox.showinfo("Success", "Budget set successfully!")
+            self.show_view_budget_frame()
+
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+        # Buttons
+        button_frame = tk.Frame(frame)
+        button_frame.pack(pady=20)
+
+        tk.Button(button_frame, text="Set Budget", 
+               command=set_budget, width=20).pack(pady=5)
+        tk.Button(button_frame, text="Back to View Budget", 
+              command=self.show_view_budget_frame, width=20).pack(pady=5)
+              
+    def load_budget_data(self):
+        """Load budget data from JSON file"""
+        try:
+            if os.path.exists('budget.json'):
+                with open('budget.json', 'r') as file:
+                    return json.load(file)
+            return {}
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not load budget data: {str(e)}")
+            return {}
+    
+    def save_budget_data(self, data):
+        """Save budget data to JSON file"""
+        try:
+            with open('budget.json', 'w') as file:
+                json.dump(data, file, indent=4)
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not save budget data: {str(e)}")
+
 
 def main():
     root = tk.Tk()
