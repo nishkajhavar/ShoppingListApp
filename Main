@@ -9,7 +9,8 @@ class LoginApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Login System")
-        self.root.geometry("700x500")
+        self.root.geometry("700x600")
+        self.root.configure(bg='#FFFFFF')
         self.root.resizable(False, False)
 
         # Initialize database
@@ -38,81 +39,126 @@ class LoginApp:
                 ''')
                 conn.commit()
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
+            messagebox.showerror("Database Error", f"An error occurred: {str(e)}",parent=self.root)
 
     def clear_window(self):
         for widget in self.root.winfo_children():
             widget.destroy()
 
     def show_login_frame(self):
-        self.clear_window()
+            self.clear_window()
     
-        # Main frame
-        frame = tk.Frame(self.root, padx=20, pady=20)
-        frame.pack(expand=True)
+            # Main frame
+            frame = tk.Frame(self.root, padx=20, pady=20)
+            frame.pack(expand=True)
+            frame.configure(bg='#076263')
     
-        # Title
-        tk.Label(frame, text="Login", font=("Times New Roman", 24)).pack(pady=20)
+            # Title
+            tk.Label(frame, 
+                    text="Login", 
+                    font=("Times New Roman", 24),
+                    bg='#076263',    # Add background color
+                    fg='white'       # Add white text color
+            ).pack(pady=20)
     
-        # Username
-        tk.Label(frame, text="Username:",font=("Times New Roman", 12)).pack()
-        self.username = tk.Entry(frame, width=30)
-        self.username.pack(pady=5)
+            # Username
+            tk.Label(frame, 
+                    text="Username:",
+                    font=("Times New Roman", 12),
+                    bg='#076263',    # Add background color
+                    fg='white'       # Add white text color
+            ).pack()
+            self.username = tk.Entry(frame, width=30)
+            self.username.pack(pady=5)
     
-        # Password
-        tk.Label(frame, text="Password:",font=("Times New Roman", 12)).pack()
-        self.password = tk.Entry(frame, show="*", width=30)
-        self.password.pack(pady=5)
+            # Password
+            tk.Label(frame, 
+                    text="Password:",
+                    font=("Times New Roman", 12),
+                    bg='#076263',    # Add background color
+                    fg='white'       # Add white text color
+            ).pack()
+            self.password = tk.Entry(frame, show="*", width=30)
+            self.password.pack(pady=5)
     
-        # Login button
-        login_btn = tk.Button(frame, text="Login", 
-                            command=self.login_user,
-                            width=20,font=("Times New Roman", 10))
-        login_btn.pack(pady=20)
+            # Login button
+            login_btn = tk.Button(frame, 
+                                text="Login", 
+                                command=self.login_user,
+                                width=20,
+                                font=("Times New Roman", 10))
+            login_btn.pack(pady=20)
     
-        # Create account link
-        create_acc_btn = tk.Button(frame, text="Create New Account", 
-                                 command=self.show_create_account_frame,
-                                 width=20,font=("Times New Roman", 10))
-        create_acc_btn.pack()
+            # Create account link
+            create_acc_btn = tk.Button(frame, 
+                                     text="Create New Account", 
+                                     command=self.show_create_account_frame,
+                                     width=20,
+                                     font=("Times New Roman", 10))
+            create_acc_btn.pack()
 
     def show_create_account_frame(self):
         self.clear_window()
-    
+
         # Main frame
         frame = tk.Frame(self.root, padx=20, pady=20)
         frame.pack(expand=True)
-    
+        frame.configure(bg='#076263')  # Add background color to frame
+
         # Title
-        tk.Label(frame, text="Create Account", font=("Times New Roman", 24)).pack(pady=20)
-    
+        tk.Label(frame, 
+                text="Create Account", 
+                font=("Times New Roman", 24),
+                bg='#076263',
+                fg='white'
+        ).pack(pady=20)
+
         # Username
-        tk.Label(frame, text="Choose Username:").pack()
+        tk.Label(frame, 
+                text="Choose Username:",
+                font=("Times New Roman", 12),
+                bg='#076263',
+                fg='white'
+        ).pack()
         self.new_username = tk.Entry(frame, width=30)
         self.new_username.pack(pady=5)
-    
+
         # Password
-        tk.Label(frame, text="Choose Password:").pack()
+        tk.Label(frame, 
+                text="Choose Password:",
+                font=("Times New Roman", 12),
+                bg='#076263',
+                fg='white'
+        ).pack()
         self.new_password = tk.Entry(frame, show="*", width=30)
         self.new_password.pack(pady=5)
-    
+
         # Confirm Password
-        tk.Label(frame, text="Confirm Password:").pack()
+        tk.Label(frame, 
+                text="Confirm Password:",
+                font=("Times New Roman", 12),
+                bg='#076263',
+                fg='white'
+        ).pack()
         self.confirm_password = tk.Entry(frame, show="*", width=30)
         self.confirm_password.pack(pady=5)
-    
+
         # Submit button
-        submit_btn = tk.Button(frame, text="Create Account", 
+        submit_btn = tk.Button(frame, 
+                             text="Create Account", 
                              command=self.create_account,
-                             width=20)
+                             width=20,
+                             font=("Times New Roman", 10))
         submit_btn.pack(pady=20)
-    
+
         # Back button
-        back_btn = tk.Button(frame, text="Back to Login", 
+        back_btn = tk.Button(frame, 
+                           text="Back to Login", 
                            command=self.show_login_frame,
-                           width=20)
+                           width=20,
+                           font=("Times New Roman", 10))
         back_btn.pack()
-    
+
     def show_home_frame(self):
         self.clear_window()
     
@@ -126,7 +172,7 @@ class LoginApp:
         # Navigation buttons
         buttons = [
             ("Shopping List", self.show_shopping_list_frame),  # Updated this line
-            ("Budget", lambda: self.show_view_budget_frame),  # Updated this line),
+            ("Budget", self.show_view_budget_frame),  # Updated this line),
             ("Analytics", lambda: messagebox.showinfo("Info", "Analytics Page"))
         ]
     
@@ -145,7 +191,7 @@ class LoginApp:
         password = self.password.get()
 
         if not username or not password:
-            messagebox.showerror("Error", "Please fill in all fields")
+            messagebox.showerror("Error", "Please fill in all fields", parent=self.root)
             return
 
         try:
@@ -157,9 +203,9 @@ class LoginApp:
                 if cursor.fetchone():
                     self.show_home_frame()
                 else:
-                    messagebox.showerror("Error", "Invalid username or password")
+                    messagebox.showerror("Error", "Invalid username or password", parent=self.root)
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
+            messagebox.showerror("Database Error", f"An error occurred: {str(e)}", parent=self.root)
 
     def create_account(self):
         username = self.new_username.get()
@@ -167,11 +213,11 @@ class LoginApp:
         confirm = self.confirm_password.get()
 
         if not username or not password or not confirm:
-            messagebox.showerror("Error", "Please fill in all fields")
+            messagebox.showerror("Error", "Please fill in all fields", parent=self.root)
             return
 
         if password != confirm:
-            messagebox.showerror("Error", "Passwords do not match")
+            messagebox.showerror("Error", "Passwords do not match", parent=self.root)
             return
 
         try:
@@ -181,13 +227,13 @@ class LoginApp:
                              (username, password))
                 conn.commit()
 
-            messagebox.showinfo("Success", "Account created successfully!")
+            messagebox.showinfo("Success", "Account created successfully!", parent=self.root)
             self.show_login_frame()
 
         except sqlite3.IntegrityError:
-            messagebox.showerror("Error", "Username already exists")
+            messagebox.showerror("Error", "Username already exists", parent=self.root)
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
+            messagebox.showerror("Database Error", f"An error occurred: {str(e)}", parent=self.root)
             
     def initialize_shopping_list(self):
         """Initialize the shopping list JSON file if it doesn't exist"""
@@ -196,7 +242,7 @@ class LoginApp:
                 with open('shopping_list.json', 'w') as file:
                     json.dump([], file)
             except Exception as e:
-                messagebox.showerror("Error", f"Could not create shopping list file: {str(e)}")
+                messagebox.showerror("Error", f"Could not create shopping list file: {str(e)}", parent=self.root)
     
     def load_shopping_list(self):
         """Load shopping list from JSON file"""
@@ -206,7 +252,7 @@ class LoginApp:
                     return json.load(file)
             return []
         except Exception as e:
-            messagebox.showerror("Error", f"Could not load shopping list: {str(e)}")
+            messagebox.showerror("Error", f"Could not load shopping list: {str(e)}", parent=self.root)
             return []
     
     def save_shopping_list(self, items):
@@ -215,7 +261,7 @@ class LoginApp:
             with open('shopping_list.json', 'w') as file:
                 json.dump(items, file, indent=4)
         except Exception as e:
-            messagebox.showerror("Error", f"Could not save shopping list: {str(e)}")
+            messagebox.showerror("Error", f"Could not save shopping list: {str(e)}", parent=self.root)
         
     def show_shopping_list_frame(self):
         self.clear_window()
@@ -333,19 +379,21 @@ class LoginApp:
         scrollbar.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
 
-        # Create a frame for bottom buttons
-        bottom_button_frame = tk.Frame(main_frame)
-        bottom_button_frame.pack(fill="x", pady=10)
-    
-        # Add spacer frame to push buttons to the right
-        spacer = tk.Frame(bottom_button_frame)
+
+        # Add a "Back to Home" button at the bottom
+        back_frame = tk.Frame(main_frame)
+        back_frame.pack(fill="x", pady=10)
+
+        # Add spacer to push button to the right
+        spacer = tk.Frame(back_frame)
         spacer.pack(side="left", expand=True)
-    
-        # Back to Home button (right corner)
-        tk.Button(bottom_button_frame, 
-                  text="Back to Home",
-                  command=self.show_home_frame,
-                  width=15).pack(side="right", padx=10)
+
+        # Back to Home button
+        tk.Button(back_frame, 
+                 text="Back to Home",
+                 command=self.show_home_frame,
+                 font=("Times New Roman", 10),
+                 width=15).pack(side="right", padx=10)
         
     def show_add_item_frame(self):
         self.clear_window()
@@ -404,25 +452,25 @@ class LoginApp:
     
         # Validation
         if not name:
-            messagebox.showerror("Error", "Please enter an item name")
+            messagebox.showerror("Error", "Please enter an item name", parent=self.root)
             return
     
         try:
             price = float(price_str)
             if price < 0:
-                messagebox.showerror("Error", "Price cannot be negative")
+                messagebox.showerror("Error", "Price cannot be negative", parent=self.root)
                 return
         except ValueError:
-            messagebox.showerror("Error", "Please enter a valid price")
+            messagebox.showerror("Error", "Please enter a valid price", parent=self.root)
             return
     
         try:
             qty = int(qty_str)
             if qty < 1:
-                messagebox.showerror("Error", "Quantity must be at least 1")
+                messagebox.showerror("Error", "Quantity must be at least 1", parent=self.root)
                 return
         except ValueError:
-            messagebox.showerror("Error", "Please enter a valid quantity")
+            messagebox.showerror("Error", "Please enter a valid quantity", parent=self.root)
             return
     
         # Get current items
@@ -443,7 +491,7 @@ class LoginApp:
         # Save updated list
         self.save_shopping_list(items)
     
-        messagebox.showinfo("Success", "Item added successfully!")
+        messagebox.showinfo("Success", "Item added successfully!", parent=self.root)
         self.show_shopping_list_frame()
         
         def increment_quantity():
@@ -503,7 +551,7 @@ class LoginApp:
         self.show_shopping_list_frame()
         
     def remove_item(self, index):
-        if messagebox.askyesno("Confirm", "Are you sure you want to remove this item?"):
+        if messagebox.askyesno("Confirm", "Are you sure you want to remove this item?", parent=self.root):
             items = self.load_shopping_list()
             items.pop(index)
             self.save_shopping_list(items)
@@ -546,7 +594,7 @@ class LoginApp:
         self.clear_window()
     
         # Main frame
-        frame = tk.Frame(self.root, padx=20, pady=20)
+        frame = tk.Frame(self.root, padx=5, pady=5) 
         frame.pack(expand=True)
     
         # Title
@@ -556,10 +604,22 @@ class LoginApp:
         budget_frame = tk.Frame(frame)
         budget_frame.pack(fill="x", pady=10)
     
-        # Load budget data (you'll need to implement this)
+        # Load budget data
         budget_data = self.load_budget_data()
+        print("Budget data in view frame:", budget_data)  # Debug print
+    
+        # Display period and total budget
+        period = budget_data.get('period', 'Not set')
+        total_budget = budget_data.get('total', 0)
+        print(f"Period: {period}, Total Budget: {total_budget}")  # Debug print
+    
+        tk.Label(budget_frame, text=f"Budget Period: {period}", font=("Times New Roman", 12, "bold")).pack(pady=5)
+        tk.Label(budget_frame, text=f"Total Budget: ${total_budget:.2f}", font=("Times New Roman", 12, "bold")).pack(pady=5)
     
         # Display budget for each category
+        categories_data = budget_data.get('categories', {})
+        print("Categories data:", categories_data)  # Debug print
+    
         for category in self.CATEGORIES:
             category_frame = tk.Frame(budget_frame)
             category_frame.pack(fill="x", pady=5)
@@ -567,13 +627,15 @@ class LoginApp:
             tk.Label(category_frame, text=f"{category}:", font=("Times New Roman", 12, "bold")).pack(side="left", padx=10)
     
             # Total allocated
-            allocated = budget_data.get(category, {}).get('allocated', 0)
+            allocated = categories_data.get(category, {}).get('allocated', 0)
             tk.Label(category_frame, text=f"Allocated: ${allocated:.2f}").pack(side="left", padx=10)
     
             # Remaining
-            remaining = budget_data.get(category, {}).get('remaining', 0)
+            remaining = categories_data.get(category, {}).get('remaining', 0)
             tk.Label(category_frame, text=f"Remaining: ${remaining:.2f}").pack(side="left", padx=10)
+
     
+
         # Navigation buttons
         button_frame = tk.Frame(frame)
         button_frame.pack(pady=20)
@@ -582,12 +644,12 @@ class LoginApp:
                   command=self.show_set_budget_frame, width=20).pack(pady=5)
         tk.Button(button_frame, text="Back to Home", 
                   command=self.show_home_frame, width=20).pack(pady=5)
-
+                  
     def show_set_budget_frame(self):
         self.clear_window()
     
         # Main frame
-        frame = tk.Frame(self.root, padx=20, pady=20)
+        frame = tk.Frame(self.root, padx=10, pady=10)
         frame.pack(expand=True)
     
         # Title
@@ -598,72 +660,92 @@ class LoginApp:
         period_frame.pack(fill="x", pady=10)
     
         tk.Label(period_frame, text="Budget Period:").pack(side="left", padx=5)
-        period_var = tk.StringVar(value="Monthly")
+        self.period_var = tk.StringVar(value="Monthly")
     
         for period in ["Weekly", "Bi-weekly", "Monthly"]:
-            tk.Radiobutton(period_frame, text=period, variable=period_var, 
+            tk.Radiobutton(period_frame, text=period, variable=self.period_var, 
                           value=period).pack(side="left", padx=5)
     
         # Total budget entry
         total_frame = tk.Frame(frame)
-        total_frame.pack(fill="x", pady=10)
+        total_frame.pack(fill="x", pady=5)
     
         tk.Label(total_frame, text="Total Budget: $").pack(side="left")
-        total_budget = tk.Entry(total_frame, width=10)
-        total_budget.pack(side="left", padx=5)
+        self.total_budget = tk.Entry(total_frame, width=10)
+        self.total_budget.pack(side="left", padx=5)
     
         # Category allocations
-        category_frames = {}
-        category_vars = {}
-        na_vars = {}
+        self.category_frames = {}
+        self.category_vars = {}
+        self.na_vars = {}
     
         for category in self.CATEGORIES:
             cat_frame = tk.Frame(frame)
             cat_frame.pack(fill="x", pady=5)
-            category_frames[category] = cat_frame
+            self.category_frames[category] = cat_frame
     
             tk.Label(cat_frame, text=f"{category}:").pack(side="left", padx=5)
     
             # Percentage entry
             percent_var = tk.StringVar()
-            category_vars[category] = percent_var
+            self.category_vars[category] = percent_var
             percent_entry = tk.Entry(cat_frame, textvariable=percent_var, width=5)
             percent_entry.pack(side="left")
             tk.Label(cat_frame, text="%").pack(side="left")
     
             # NA checkbox
             na_var = tk.BooleanVar()
-            na_vars[category] = na_var
+            self.na_vars[category] = na_var
             tk.Checkbutton(cat_frame, text="N/A", variable=na_var,
                           command=lambda e=percent_entry, v=na_var: e.config(
                               state='disabled' if v.get() else 'normal')).pack(side="left", padx=5)
+    
+        # Buttons frame
+        button_frame = tk.Frame(frame)
+        button_frame.pack(pady=20)
+    
+        # Confirm Budget button
+        tk.Button(button_frame, 
+                text="Confirm Budget", 
+                command=self.set_budget,
+                width=20,
+                font=("Times New Roman", 10)).pack(pady=2)
+    
+        # Back button
+        tk.Button(button_frame, 
+                 text="Back to View Budget", 
+                 command=self.show_view_budget_frame,
+                 width=20,
+                 font=("Times New Roman", 10)).pack(pady=2)
 
-    def set_budget():
+
+    
+    def set_budget(self, event=None):
         try:
-            total = float(total_budget.get())
+            total = float(self.total_budget.get())
             if total <= 0:
                 raise ValueError("Total budget must be positive")
-    
+
             percentages = {}
             for category in self.CATEGORIES:
-                if not na_vars[category].get():
+                if not self.na_vars[category].get():
                     try:
-                        percent = float(category_vars[category].get())
+                        percent = float(self.category_vars[category].get())
                         if percent < 0 or percent > 100:
                             raise ValueError(f"Invalid percentage for {category}")
                         percentages[category] = percent
                     except ValueError:
-                        messagebox.showerror("Error", f"Invalid percentage for {category}")
+                        messagebox.showerror("Error", f"Invalid percentage for {category}", parent=self.root)
                         return
 
             # Validate total percentage
             if sum(percentages.values()) > 100:
-                messagebox.showerror("Error", "Total percentage exceeds 100%")
+                messagebox.showerror("Error", "Total percentage exceeds 100%", parent=self.root)
                 return
 
             # Save budget data
             budget_data = {
-                'period': period_var.get(),
+                'period': self.period_var.get(),
                 'total': total,
                 'categories': {
                     cat: {
@@ -671,32 +753,29 @@ class LoginApp:
                         'remaining': total * (percentages.get(cat, 0) / 100)
                     } for cat in self.CATEGORIES
                 }
-            }
+                }
 
             self.save_budget_data(budget_data)
-            messagebox.showinfo("Success", "Budget set successfully!")
+            messagebox.showinfo("Success", "Budget set successfully!", parent=self.root)
             self.show_view_budget_frame()
 
         except ValueError as e:
-            messagebox.showerror("Error", str(e))
-        # Buttons
-        button_frame = tk.Frame(frame)
-        button_frame.pack(pady=20)
+            messagebox.showerror("Error", str(e), parent=self.root)
 
-        tk.Button(button_frame, text="Set Budget", 
-               command=set_budget, width=20).pack(pady=5)
-        tk.Button(button_frame, text="Back to View Budget", 
-              command=self.show_view_budget_frame, width=20).pack(pady=5)
+
+
+
               
     def load_budget_data(self):
         """Load budget data from JSON file"""
         try:
             if os.path.exists('budget.json'):
                 with open('budget.json', 'r') as file:
-                    return json.load(file)
+                    data = json.load(file)
+                    return data
             return {}
         except Exception as e:
-            messagebox.showerror("Error", f"Could not load budget data: {str(e)}")
+            messagebox.showerror("Error", f"Could not load budget data: {str(e)}", parent=self.root)
             return {}
     
     def save_budget_data(self, data):
@@ -705,7 +784,7 @@ class LoginApp:
             with open('budget.json', 'w') as file:
                 json.dump(data, file, indent=4)
         except Exception as e:
-            messagebox.showerror("Error", f"Could not save budget data: {str(e)}")
+            messagebox.showerror("Error", f"Could not save budget data: {str(e)}", parent=self.root)
 
 
 def main():
